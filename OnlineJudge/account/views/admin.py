@@ -137,6 +137,7 @@ class UserAdminAPI(APIView):
         return self.success()
 
 class UserDetailsAdminAPI(APIView):    
+    @super_admin_required
     def put(self, request):
         """
         update account status

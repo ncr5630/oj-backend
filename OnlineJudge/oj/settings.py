@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 import os
+import sys
 import raven
 from copy import deepcopy
 from utils.shortcuts import get_env
@@ -196,7 +197,6 @@ REST_FRAMEWORK = {
 }
 
 REDIS_URL = "redis://%s:%s" % (REDIS_CONF["host"], REDIS_CONF["port"])
-
 
 def redis_config(db):
     def make_key(key, key_prefix, version):

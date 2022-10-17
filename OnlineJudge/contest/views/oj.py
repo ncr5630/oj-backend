@@ -33,6 +33,7 @@ class ContestAnnouncementListAPI(APIView):
 
 
 class ContestAPI(APIView):
+    @login_required
     def get(self, request):
         id = request.GET.get("id")
         if not id or not check_is_id(id):
