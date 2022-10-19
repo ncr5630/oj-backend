@@ -1,12 +1,8 @@
-import logging
-import sys
-import traceback
 from account.decorators import super_admin_required
 from utils.api import APIView, validate_serializer
 
 from board.models import Board
-from board.serializers import (BoardSerializer, CreateBoardSerializer,
-                                      EditBoardSerializer)
+from board.serializers import (BoardSerializer, CreateBoardSerializer, EditBoardSerializer)
 
 
 class BoardListAdminAPI(APIView):
@@ -14,6 +10,7 @@ class BoardListAdminAPI(APIView):
     def get(self, request):
         boards = Board.objects.filter(visible=True)
         return self.success(self.paginate_data(request, boards, BoardSerializer))
+
 
 class BoardAdminAPI(APIView):
     @validate_serializer(CreateBoardSerializer)
@@ -23,10 +20,7 @@ class BoardAdminAPI(APIView):
         publish Board
         """
         data = request.data
-        board = Board.objects.create(title=data["title"],
-                                                   content=data["content"],
-                                                   created_by=request.user,
-                                                   visible=data["visible"])
+        board = Board.objects.create(title=data["title"], content=data["content"], created_by=request.user, visible=data["visible"])
         return self.success(BoardSerializer(board).data)
 
     @validate_serializer(EditBoardSerializer)
@@ -59,8 +53,7 @@ class BoardAdminAPI(APIView):
             except Board.DoesNotExist:
                 return self.error("Board does not exist")
         board_data = Board.objects.all().order_by("-create_time")
-        # if request.GET.get("visible") == "true":
-        #     Board = Board.filter(visible=True)
+
         return self.success(self.paginate_data(request, board_data, BoardSerializer))
 
     @super_admin_required

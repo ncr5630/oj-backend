@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-import sys
 import xlsxwriter
 import traceback
 
@@ -18,7 +17,6 @@ from ..decorators import super_admin_required
 from ..models import AdminType, ProblemPermission, User, UserProfile
 from ..serializers import EditUserSerializer, UserAdminSerializer, GenerateUserSerializer
 from ..serializers import ImportUserSeralizer
-
 
 
 class UserAdminAPI(APIView):
@@ -136,24 +134,25 @@ class UserAdminAPI(APIView):
         User.objects.filter(id__in=ids).delete()
         return self.success()
 
-class UserDetailsAdminAPI(APIView):    
+
+class UserDetailsAdminAPI(APIView):
     @super_admin_required
     def put(self, request):
         """
         update account status
         """
-        user_id = request.data.get('id')
-        is_disabled = request.data.get('is_disabled')
+        user_id = request.data.get("id")
+        is_disabled = request.data.get("is_disabled")
         if user_id:
             try:
-                user = User.objects.get(id=user_id)
+                User.objects.get(id=user_id)
             except User.DoesNotExist:
-                return self.error("User does not exist")        
+                return self.error("User does not exist")
         try:
             User.objects.filter(id=user_id).update(is_disabled=is_disabled)
             return self.success("Succeeded")
         except Exception as Error:
-            Error_data = "Can't update account status. %s" %traceback.format_exc()
+            Error_data = "Can't update account status.%s %s" % (Error, traceback.format_exc())
             logging.DEBUG(Error_data)
             return self.error("Can't update account status.")
 
