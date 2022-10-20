@@ -1,7 +1,6 @@
 import os
 from datetime import timedelta
 from importlib import import_module
-import sys
 
 import qrcode
 from django.conf import settings
@@ -165,7 +164,7 @@ class UserLoginAPI(APIView):
         if user:
             if user.is_disabled:
                 return self.error("Your account has been disabled")
-             
+
             if not user.two_factor_auth:
                 auth.login(request, user)
                 return self.success("Succeeded")
@@ -223,8 +222,8 @@ class UserRegisterAPI(APIView):
         data["real_name"] = data["real_name"]
 
         data["email"] = data["email"].lower()
-        
-        captcha = Captcha(request)
+
+        # captcha = Captcha(request)
         # if not captcha.check(data["captcha"]):
         #     return self.error("Invalid captcha")
         if User.objects.filter(username=data["username"]).exists():
@@ -232,14 +231,14 @@ class UserRegisterAPI(APIView):
         if User.objects.filter(email=data["email"]).exists():
             return self.error("Email already exists")
         user = User.objects.create(
-            username=data["username"], 
-            email=data["email"], 
+            username=data["username"],
+            email=data["email"],
             real_name=data["real_name"],
             is_disabled=1,
             )
         user.set_password(data["password"])
         user.save()
-        user_profile=UserProfile.objects.create(user=user)
+        UserProfile.objects.create(user=user)
         UserProfile.objects.filter(user=user).update(real_name=data["real_name"])
         return self.success("Succeeded")
 
