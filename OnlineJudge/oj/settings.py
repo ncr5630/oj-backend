@@ -144,8 +144,6 @@ UPLOAD_DIR = f"{DATA_DIR}{UPLOAD_PREFIX}"
 VIDEO_URI_PREFIX = "/public/upload/video"
 VIDEO_UPLOAD_DIR = f"{DATA_DIR}{VIDEO_URI_PREFIX}"
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 STATICFILES_DIRS = [os.path.join(DATA_DIR, "public")]
 
