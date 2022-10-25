@@ -1,15 +1,19 @@
 import io
+import logging
+# from msilib.schema import Error
+import traceback
 
 import xlsxwriter
 from django.http import HttpResponse
 from django.utils.timezone import now
 from django.core.cache import cache
+from django.db.models import Q
 
 from problem.models import Problem
 from utils.api import APIView, validate_serializer
 from utils.constants import CacheKey, CONTEST_PASSWORD_SESSION_KEY
 from utils.shortcuts import datetime2str, check_is_id
-from account.models import AdminType
+from account.models import AdminType, User
 from account.decorators import login_required, check_contest_permission, check_contest_password
 
 from utils.constants import ContestRuleType, ContestStatus
@@ -49,10 +53,17 @@ class ContestAPI(APIView):
 
 class ContestListAPI(APIView):
     def get(self, request):
+
         contests = Contest.objects.select_related("created_by").filter(visible=True)
         keyword = request.GET.get("keyword")
         rule_type = request.GET.get("rule_type")
         status = request.GET.get("status")
+        try: 
+            contests = contests.filter(Q(assign_students__icontains = request.user.id))
+        except Exception as Error:
+            Error_data = "Assign users filtering issues. %s %s" % (Error, traceback.format_exc())
+            logging.DEBUG(Error_data)
+            
         if keyword:
             contests = contests.filter(title__contains=keyword)
         if rule_type:

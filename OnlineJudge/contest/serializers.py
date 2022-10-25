@@ -27,6 +27,9 @@ class EditConetestSeriaizer(serializers.Serializer):
     real_time_rank = serializers.BooleanField()
     allowed_ip_ranges = serializers.ListField(child=serializers.CharField(max_length=32))
 
+class EditAssignConetestSeriaizer(serializers.Serializer):
+    id = serializers.IntegerField()
+    assign_students = serializers.ListField(child=serializers.CharField(max_length=32))
 
 class ContestAdminSerializer(serializers.ModelSerializer):
     created_by = UsernameSerializer()
@@ -43,6 +46,12 @@ class ContestSerializer(ContestAdminSerializer):
         model = Contest
         exclude = ("password", "visible", "allowed_ip_ranges")
 
+class ContestAssignSerializer(ContestAdminSerializer):
+    class Meta:
+        model = Contest
+        exclude = ("password", "description", 
+        "visible", "allowed_ip_ranges", "create_time",
+        "real_time_rank", "rule_type", )
 
 class ContestAnnouncementSerializer(serializers.ModelSerializer):
     created_by = UsernameSerializer()

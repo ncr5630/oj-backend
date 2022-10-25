@@ -42,7 +42,6 @@ VENDOR_APPS = [
 if production_env:
     VENDOR_APPS.append('raven.contrib.django.raven_compat')
 
-
 LOCAL_APPS = [
     'account',
     'announcement',
@@ -54,6 +53,7 @@ LOCAL_APPS = [
     'options',
     'judge',
     'board',
+    'video',
 ]
 
 INSTALLED_APPS = VENDOR_APPS + LOCAL_APPS
@@ -63,7 +63,7 @@ MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'account.middleware.APITokenAuthMiddleware',
+    # 'account.middleware.APITokenAuthMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -71,6 +71,7 @@ MIDDLEWARE = (
     'account.middleware.SessionRecordMiddleware',
     'account.middleware.LogSqlMiddleware',
 )
+
 
 
 ROOT_URLCONF = 'oj.urls'
@@ -125,6 +126,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
+DATA_UPLOAD_MAX_MEMORY_SIZE = 524542880
 
 STATIC_URL = '/public/'
 
@@ -138,6 +140,12 @@ AVATAR_UPLOAD_DIR = f"{DATA_DIR}{AVATAR_URI_PREFIX}"
 
 UPLOAD_PREFIX = "/public/upload"
 UPLOAD_DIR = f"{DATA_DIR}{UPLOAD_PREFIX}"
+
+VIDEO_URI_PREFIX = "/public/upload/video"
+VIDEO_UPLOAD_DIR = f"{DATA_DIR}{VIDEO_URI_PREFIX}"
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 STATICFILES_DIRS = [os.path.join(DATA_DIR, "public")]
 

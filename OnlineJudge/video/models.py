@@ -16,3 +16,4 @@ class VideoInfo(models.Model):
     class Meta:
         db_table = "video_info"
         ordering = ("-create_time",)
+

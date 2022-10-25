@@ -1,3 +1,4 @@
+from django import forms
 from utils.api import serializers
 from utils.api._serializers import UsernameSerializer
 
@@ -23,3 +24,6 @@ class EditVideoInfoSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=64)
     content = serializers.CharField(max_length=1024 * 1024 * 8)
     visible = serializers.BooleanField()
+
+class VideoUploadForm(forms.Form):
+    file_path = forms.FileField()

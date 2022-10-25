@@ -16,7 +16,7 @@ from utils.shortcuts import rand_str
 from ..decorators import super_admin_required
 from ..models import AdminType, ProblemPermission, User, UserProfile
 from ..serializers import EditUserSerializer, UserAdminSerializer, GenerateUserSerializer
-from ..serializers import ImportUserSeralizer
+from ..serializers import ImportUserSeralizer, UserSerializer
 
 
 class UserAdminAPI(APIView):
@@ -155,6 +155,7 @@ class UserDetailsAdminAPI(APIView):
             Error_data = "Can't update account status.%s %s" % (Error, traceback.format_exc())
             logging.DEBUG(Error_data)
             return self.error("Can't update account status.")
+
 
 
 class GenerateUserAPI(APIView):

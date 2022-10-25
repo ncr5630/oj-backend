@@ -18,7 +18,7 @@ from ..models import Contest, ContestAnnouncement, ACMContestRank
 from ..serializers import (ContestAnnouncementSerializer, ContestAdminSerializer,
                            CreateConetestSeriaizer, CreateContestAnnouncementSerializer,
                            EditConetestSeriaizer, EditContestAnnouncementSerializer,
-                           ACMContesHelperSerializer, )
+                           ACMContesHelperSerializer, ContestAssignSerializer, EditAssignConetestSeriaizer,)
 
 
 class ContestAPI(APIView):
@@ -239,3 +239,19 @@ class DownloadContestSubmissions(APIView):
         resp["Content-Type"] = "application/zip"
         resp["Content-Disposition"] = f"attachment;filename={os.path.basename(zip_path)}"
         return resp
+
+class ContestAssignStudents(APIView):
+
+    @validate_serializer(EditAssignConetestSeriaizer)
+    def put(self, request):
+        data = request.data
+        try:
+            contest = Contest.objects.get(id=data.pop("id"))
+            ensure_created_by(contest, request.user)
+        except Contest.DoesNotExist:
+            return self.error("Contest does not exist")
+
+        for k, v in data.items():
+            setattr(contest, k, v)
+        contest.save()
+        return self.success(ContestAssignSerializer(contest).data)
