@@ -20,6 +20,20 @@ class AnnouncementAdminAPI(APIView):
                                                    content=data["content"],
                                                    created_by=request.user,
                                                    visible=data["visible"])
+        announcement.save()
+        id = announcement.id
+        is_visible = request.data.get("visible")                                           
+        if id and is_visible in [True, "true", 1]:
+            entry_list = list(Announcement.objects.filter(visible=True).order_by("-create_time"))
+            for records in entry_list:
+                update_id = records.id
+                if id != update_id:
+                    try:
+                        Announcement.objects.filter(id=update_id).update(visible=False)
+                    except Exception as Error:
+                        Error_data = "Can't update visible. %s %s" % (Error, traceback.format_exc())
+                        logging.DEBUG(Error_data)
+                        return self.error("Announcements visible updating error")                                                   
         return self.success(AnnouncementSerializer(announcement).data)
 
     @validate_serializer(EditAnnouncementSerializer)

@@ -6,7 +6,7 @@ from ipaddress import ip_network
 import dateutil.parser
 from django.http import FileResponse
 
-from account.decorators import check_contest_permission, ensure_created_by
+from account.decorators import check_contest_permission, ensure_created_by, admin_role_required
 from account.models import User
 from submission.models import Submission, JudgeStatus
 from utils.api import APIView, validate_serializer
@@ -241,7 +241,8 @@ class DownloadContestSubmissions(APIView):
         return resp
 
 class ContestAssignStudents(APIView):
-
+    
+    @admin_role_required
     @validate_serializer(EditAssignConetestSeriaizer)
     def put(self, request):
         data = request.data

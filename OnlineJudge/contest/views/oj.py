@@ -2,6 +2,7 @@ import io
 import logging
 # from msilib.schema import Error
 import traceback
+from xml.dom.minidom import Identified
 
 import xlsxwriter
 from django.http import HttpResponse
@@ -40,15 +41,24 @@ class ContestAPI(APIView):
     @login_required
     def get(self, request):
         id = request.GET.get("id")
+
         if not id or not check_is_id(id):
             return self.error("Invalid parameter, id is required")
         try:
             contest = Contest.objects.get(id=id, visible=True)
         except Contest.DoesNotExist:
+            return self.error("Contest does not exist")            
+        try:
+            contests = Contest.objects.select_related("created_by").filter(visible=True, id=id)
+            contest = contests.filter(Q(assign_students__icontains = request.user.id))
+        except Contest.DoesNotExist:
             return self.error("Contest does not exist")
-        data = ContestSerializer(contest).data
-        data["now"] = datetime2str(now())
-        return self.success(data)
+        data = ContestSerializer(contest, many=True).data
+        if len(data)>0:
+            data[0]["now"] = datetime2str(now())
+            return self.success(data[0])
+        else:
+            return self.error("You are not assigned to the work")
 
 
 class ContestListAPI(APIView):
@@ -63,7 +73,7 @@ class ContestListAPI(APIView):
         except Exception as Error:
             Error_data = "Assign users filtering issues. %s %s" % (Error, traceback.format_exc())
             logging.DEBUG(Error_data)
-            
+            pass
         if keyword:
             contests = contests.filter(title__contains=keyword)
         if rule_type:

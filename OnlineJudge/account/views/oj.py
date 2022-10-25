@@ -159,11 +159,12 @@ class UserLoginAPI(APIView):
         User login api
         """
         data = request.data
+        username = data["username"] if "username" in data else self.error("The username required")
         user = auth.authenticate(username=data["username"], password=data["password"])
         # None is returned if username or password is wrong
         if user:
             if user.is_disabled:
-                return self.error("Your account has been disabled")
+                return self.error(f"The username:{username} is not accepted")
 
             if not user.two_factor_auth:
                 auth.login(request, user)

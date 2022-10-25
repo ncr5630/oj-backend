@@ -97,42 +97,36 @@ class VideoInfoUpdateAdminAPI(APIView):
             video_info=VideoInfo.objects.get(id=id)
         except VideoInfo.DoesNotExist:
             return self.error("Videos  does not exist")
-        video_info_data = VideoSerializer(video_info).data
-   
+        # video_info_data = VideoSerializer(video_info).data
+        data = {}
         form = VideoUploadForm(request.POST, request.FILES)
+        title = request.POST.get("title")
         if form.is_valid():
             uploaded_video = form.cleaned_data["file_path"]
-        else:
-            return self.response({
-                "success": False,
-                "msg": "Upload failed"
-            })
+            suffix = os.path.splitext(uploaded_video.name)[-1].lower()
+            if suffix not in [".mp4", ".flv", ".mov"]:
+                return self.error("Unsupported file format, expect mp4,flv and mov")
 
-        suffix = os.path.splitext(uploaded_video.name)[-1].lower()
-        if suffix not in [".mp4", ".flv", ".mov"]:
-            return self.error("Unsupported file format, expect mp4,flv and mov")
+            if uploaded_video.size > 100 * 1024 * 1024:
+                return self.error("video is too large, expect < 100MB")
 
-        if uploaded_video.size > 100 * 1024 * 1024:
-            return self.error("video is too large, expect < 100MB")
+            file_name = rand_str(10) + suffix
 
-        file_name = rand_str(10) + suffix
+            Path(settings.VIDEO_UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+            try:
+                with open(os.path.join(settings.VIDEO_UPLOAD_DIR, file_name), "wb") as f:
+                    for chunk in uploaded_video:
+                        f.write(chunk)
+            except IOError as e:
+                logger.error(e)
+                return self.response({
+                    "success": False,
+                    "msg": "Upload Error"})
+            file_path = f"{settings.VIDEO_URI_PREFIX}/{file_name}"
+            
+            data["file_path"] = file_path            
 
-        Path(settings.VIDEO_UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
-        try:
-            with open(os.path.join(settings.VIDEO_UPLOAD_DIR, file_name), "wb") as f:
-                for chunk in uploaded_video:
-                    f.write(chunk)
-        except IOError as e:
-            logger.error(e)
-            return self.response({
-                "success": False,
-                "msg": "Upload Error"})
-        file_path = f"{settings.VIDEO_URI_PREFIX}/{file_name}"
-        title = request.POST.get("title")
-        data = {}
         data["title"] = title
-        data["file_path"] = file_path
-
 
         for k, v in data.items():
             setattr(video_info, k, v)
