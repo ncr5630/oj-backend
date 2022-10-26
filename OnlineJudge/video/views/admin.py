@@ -13,8 +13,8 @@ from utils.api import CSRFExemptAPIView, validate_serializer
 from django.utils.decorators import method_decorator
 from utils.shortcuts import rand_str, check_is_id, datetime2str
 from video.models import VideoInfo
-from video.serializers import (VideoSerializer, VideoUploadForm, CreateVideoInfoSerializer,
-                                      EditVideoInfoSerializer)
+from video.serializers import (VideoSerializer, VideoUploadForm, VideoForm,
+                                      ImageForm)
 
 
 class VideoInfoListAdminAPI(APIView):
@@ -26,17 +26,23 @@ class VideoInfoListAdminAPI(APIView):
 class FileUploadAPIView(CSRFExemptAPIView):
     request_parsers = ()
     @admin_role_required
+
     def post(self, request):
 
         form = VideoUploadForm(request.POST, request.FILES)
         if form.is_valid():
             uploaded_video = form.cleaned_data["file_path"]
+            video_thumbnail = form.cleaned_data["video_thumbnail"]
         else:
+            
             return self.response({
                 "success": False,
-                "msg": "Upload failed"
+                "msg": "Upload failed. Add video thumbnail and video correctly"
             })
-
+        title = request.POST.get("title") 
+        if not title:
+            return self.error("Invalid parameter, title is required")
+        # video upload 
         suffix = os.path.splitext(uploaded_video.name)[-1].lower()
         if suffix not in [".mp4", ".flv", ".mov"]:
             return self.error("Unsupported file format, expect mp4,flv and mov")
@@ -44,21 +50,38 @@ class FileUploadAPIView(CSRFExemptAPIView):
         if uploaded_video.size > 100 * 1024 * 1024:
             return self.error("video is too large, expect < 100MB")
 
-        file_name = rand_str(10) + suffix
+        random_name = rand_str(10)
+
+        file_name = random_name + suffix
+
+        suffix_image = os.path.splitext(video_thumbnail.name)[-1].lower()
+        if suffix_image not in [".gif", ".jpg", ".jpeg", ".bmp", ".png"]:
+            return self.response({
+                "success": False,
+                "msg": "Unsupported file format for video thumbnail ",
+                "file_path": ""})
+
+        img_name = random_name + suffix_image       
 
         Path(settings.VIDEO_UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+        Path(settings.VIDEO_UPLOAD_DIR+"/thumbnail").mkdir(parents=True, exist_ok=True)
         try:
             with open(os.path.join(settings.VIDEO_UPLOAD_DIR, file_name), "wb") as f:
                 for chunk in uploaded_video:
                     f.write(chunk)
+            with open(os.path.join(settings.VIDEO_UPLOAD_DIR+"/thumbnail", img_name), "wb") as imgFile:
+                for chunk in video_thumbnail:
+                    imgFile.write(chunk)                    
         except IOError as e:
             logger.error(e)
             return self.response({
                 "success": False,
                 "msg": "Upload Error"})
+
+
         file_path = f"{settings.VIDEO_URI_PREFIX}/{file_name}"
-        title = request.POST.get("title")        
-        video_data = VideoInfo.objects.create(file_path=file_path, title=title, created_by=request.user)
+        video_thumbnail_path = f"{settings.VIDEO_URI_PREFIX}/thumbnail/{img_name}"               
+        video_data = VideoInfo.objects.create(file_path=file_path, video_thumbnail=video_thumbnail_path, title=title, created_by=request.user)
         return self.success(VideoSerializer(video_data).data)
 
 
@@ -97,15 +120,19 @@ class VideoInfoUpdateAdminAPI(APIView):
             video_info=VideoInfo.objects.get(id=id)
         except VideoInfo.DoesNotExist:
             return self.error("Videos  does not exist")
-        # video_info_data = VideoSerializer(video_info).data
+
         data = {}
-        form = VideoUploadForm(request.POST, request.FILES)
+        video_form = VideoForm(request.POST, request.FILES)
+        thumbnail_form = ImageForm(request.POST, request.FILES)
         title = request.POST.get("title")
-        if form.is_valid():
-            uploaded_video = form.cleaned_data["file_path"]
+        if title:
+            data["title"] = title
+
+        if video_form.is_valid():
+            uploaded_video = video_form.cleaned_data["file_path"]
             suffix = os.path.splitext(uploaded_video.name)[-1].lower()
             if suffix not in [".mp4", ".flv", ".mov"]:
-                return self.error("Unsupported file format, expect mp4,flv and mov")
+                return self.error("Unsupported video format, expect mp4,flv and mov")
 
             if uploaded_video.size > 100 * 1024 * 1024:
                 return self.error("video is too large, expect < 100MB")
@@ -126,7 +153,30 @@ class VideoInfoUpdateAdminAPI(APIView):
             
             data["file_path"] = file_path            
 
-        data["title"] = title
+        if thumbnail_form.is_valid():
+            video_thumbnail = thumbnail_form.cleaned_data["video_thumbnail"]
+            suffix_image = os.path.splitext(video_thumbnail.name)[-1].lower()
+            if suffix_image not in [".gif", ".jpg", ".jpeg", ".bmp", ".png"]:
+                return self.response({
+                    "success": False,
+                    "msg": "Unsupported file format for video thumbnail ",
+                    "file_path": ""})
+
+            thumbnail_name = rand_str(10) + suffix_image
+            Path(settings.VIDEO_UPLOAD_DIR+"/thumbnail").mkdir(parents=True, exist_ok=True)
+            try:
+                with open(os.path.join(settings.VIDEO_UPLOAD_DIR+"/thumbnail", thumbnail_name), "wb") as f:
+                    for chunk in video_thumbnail:
+                        f.write(chunk)
+            except IOError as e:
+                logger.error(e)
+                return self.response({
+                    "success": False,
+                    "msg": "Upload Error"})
+            thumbnail_path = f"{settings.VIDEO_URI_PREFIX}/thumbnail/{thumbnail_name}"
+            
+            data["video_thumbnail"] = thumbnail_path  
+        
 
         for k, v in data.items():
             setattr(video_info, k, v)
