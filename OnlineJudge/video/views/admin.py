@@ -21,6 +21,9 @@ class VideoInfoListAdminAPI(APIView):
     @admin_role_required
     def get(self, request):
         videos = VideoInfo.objects.filter(visible=True).order_by("-create_time")
+        keyword = request.GET.get("keyword")
+        if keyword:
+            videos = videos.filter(title__contains=keyword)        
         return self.success(self.paginate_data(request, videos, VideoSerializer))
 
 class FileUploadAPIView(CSRFExemptAPIView):

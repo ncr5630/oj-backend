@@ -8,7 +8,6 @@ from account.decorators import login_required
 class BoardListAPI(APIView):
     @login_required
     def get(self, request):
-        # boards = Board.objects.filter(visible=True)
         boards = Board.objects.select_related("created_by").filter(visible=True)
         return self.success(self.paginate_data(request, boards, BoardSerializer))
 
