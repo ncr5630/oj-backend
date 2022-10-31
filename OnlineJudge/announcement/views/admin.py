@@ -19,24 +19,25 @@ class AnnouncementAdminAPI(APIView):
         announcement = Announcement.objects.create(title=data["title"],
                                                    content=data["content"],
                                                    created_by=request.user,
-                                                   visible=data["visible"])
+                                                   visible=data["visible"],
+                                                   notice=data["notice"]
+                                                   )
         announcement.save()
         id = announcement.id
-        is_visible = request.data.get("visible")                                           
-        if id and is_visible in [True, "true", 1]:
-            entry_list = list(Announcement.objects.filter(visible=True).order_by("-create_time"))
+        is_notice = request.data.get("notice")                                           
+        if id and is_notice in [True, "true", 1]:
+            entry_list = list(Announcement.objects.filter(notice=True).order_by("-create_time"))
             for records in entry_list:
                 update_id = records.id
                 if id != update_id:
                     try:
-                        Announcement.objects.filter(id=update_id).update(visible=False)
+                        Announcement.objects.filter(id=update_id).update(notice=False)
                     except Exception as Error:
-                        Error_data = "Can't update visible. %s %s" % (Error, traceback.format_exc())
+                        Error_data = "Can't update notice. %s %s" % (Error, traceback.format_exc())
                         logging.DEBUG(Error_data)
-                        return self.error("Announcements visible updating error")                                                   
+                        return self.error("Announcements notice updating error")                                                   
         return self.success(AnnouncementSerializer(announcement).data)
 
-    @validate_serializer(EditAnnouncementSerializer)
     @super_admin_required
     def put(self, request):
         """
@@ -44,26 +45,26 @@ class AnnouncementAdminAPI(APIView):
         """
         data = request.data
         id = request.data.get("id")
-        is_visible = request.data.get("visible")
+        is_notice = request.data.get("notice")
         try:
             announcement = Announcement.objects.get(id=data.pop("id"))
         except Announcement.DoesNotExist:
             return self.error("Announcement  does not exist")
-
         for k, v in data.items():
             setattr(announcement, k, v)
         announcement.save()
-        if id and is_visible in [True, "true", 1]:
-            entry_list = list(Announcement.objects.filter(visible=True).order_by("-create_time"))
+        if id and is_notice in [True, "true", 1]:
+            entry_list = list(Announcement.objects.filter(notice=True).order_by("-create_time"))
             for records in entry_list:
+
                 update_id = records.id
                 if id != update_id:
                     try:
-                        Announcement.objects.filter(id=update_id).update(visible=False)
+                        Announcement.objects.filter(id=update_id).update(notice=False)
                     except Exception as Error:
-                        Error_data = "Can't update visible. %s %s" % (Error, traceback.format_exc())
+                        Error_data = "Can't update notice. %s %s" % (Error, traceback.format_exc())
                         logging.DEBUG(Error_data)
-                        return self.error("Announcements visible updating error")
+                        return self.error("Announcements notice updating error")
 
         return self.success(AnnouncementSerializer(announcement).data)
 
@@ -73,16 +74,21 @@ class AnnouncementAdminAPI(APIView):
         get announcement list / get one announcement
         """
         announcement_id = request.GET.get("id")
+        notice = request.GET.get("notice")
+        is_visible = request.GET.get("visible")
         if announcement_id:
             try:
                 announcement = Announcement.objects.get(id=announcement_id)
                 return self.success(AnnouncementSerializer(announcement).data)
             except Announcement.DoesNotExist:
                 return self.error("Announcement does not exist")
-        announcement = Announcement.objects.all().order_by("-create_time")
-        if request.GET.get("visible") == "true":
-            announcement = announcement.filter(visible=True)
-        return self.success(self.paginate_data(request, announcement, AnnouncementSerializer))
+
+        announcements = Announcement.objects.all().order_by("-create_time")
+        if notice == "true":
+            announcements = announcements.filter(notice=True)
+        if is_visible == "true":
+            announcements = announcements.filter(visible=True)
+        return self.success(self.paginate_data(request, announcements, AnnouncementSerializer))
 
     @super_admin_required
     def delete(self, request):
