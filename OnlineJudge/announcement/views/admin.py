@@ -76,6 +76,7 @@ class AnnouncementAdminAPI(APIView):
         announcement_id = request.GET.get("id")
         notice = request.GET.get("notice")
         is_visible = request.GET.get("visible")
+        keyword = request.GET.get("keyword")
         if announcement_id:
             try:
                 announcement = Announcement.objects.get(id=announcement_id)
@@ -84,6 +85,9 @@ class AnnouncementAdminAPI(APIView):
                 return self.error("Announcement does not exist")
 
         announcements = Announcement.objects.all().order_by("-create_time")
+
+        if keyword:
+            announcements = announcements.filter(title__contains=keyword) 
         if notice == "true":
             announcements = announcements.filter(notice=True)
         if is_visible == "true":
