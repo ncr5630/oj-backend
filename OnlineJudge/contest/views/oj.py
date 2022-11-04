@@ -68,12 +68,12 @@ class ContestListAPI(APIView):
         keyword = request.GET.get("keyword")
         rule_type = request.GET.get("rule_type")
         status = request.GET.get("status")
-        try: 
-            contests = contests.filter(Q(assign_students__icontains = request.user.id))
-        except Exception as Error:
-            Error_data = "Assign users filtering issues. %s %s" % (Error, traceback.format_exc())
-            logging.DEBUG(Error_data)
-            pass
+        # try: 
+        #     contests = contests.filter(Q(assign_students__icontains = request.user.id))
+        # except Exception as Error:
+        #     Error_data = "Assign users filtering issues. %s %s" % (Error, traceback.format_exc())
+        #     logging.DEBUG(Error_data)
+        #     pass
         if keyword:
             contests = contests.filter(title__contains=keyword)
         if rule_type:
