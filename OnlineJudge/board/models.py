@@ -12,6 +12,7 @@ class Board(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     last_update_time = models.DateTimeField(auto_now=True)
     visible = models.BooleanField(default=True)
+    view_count = models.IntegerField(default=0)
 
     class Meta:
         db_table = "bulletin_board"

@@ -1,3 +1,5 @@
+import logging
+import traceback
 from utils.api import APIView, validate_serializer
 
 from board.models import Board
@@ -11,6 +13,27 @@ class BoardListAPI(APIView):
         boards = Board.objects.select_related("created_by").filter(visible=True)
         return self.success(self.paginate_data(request, boards, BoardSerializer))
 
+
+class BoardViewCountAPI(APIView):
+    @login_required
+    def put(self, request):
+        """
+        update board view count
+        """
+        board_id = request.GET.get("id")
+        view_count = request.data.get("view_count")
+        if board_id:
+            try:
+                Board.objects.get(id=board_id)
+            except Board.DoesNotExist:
+                return self.error("Board does not exist")
+        try:
+            Board.objects.filter(id=board_id).update(view_count=view_count)
+            return self.success("Succeeded")
+        except Exception as Error:
+            Error_data = "Can't update Board views.%s %s" % (Error, traceback.format_exc())
+            logging.DEBUG(Error_data)
+            return self.error("Can't update Board views.")
 
 class BoardAPI(APIView):
     @validate_serializer(CreateBoardSerializer)
