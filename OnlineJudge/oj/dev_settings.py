@@ -18,7 +18,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'HOST': get_env('POSTGRES_HOST', '172.24.96.1'),
+        'HOST': get_env('POSTGRES_HOST', '172.28.16.1'),
         'PORT': get_env('POSTGRES_PORT', '5432'),
         'NAME': get_env('POSTGRES_DB', 'onlinejudge'),
         'USER': get_env('POSTGRES_USER', 'onlinejudge'),

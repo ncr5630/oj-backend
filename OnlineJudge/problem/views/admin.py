@@ -569,7 +569,12 @@ class ImportProblemAPI(CSRFExemptAPIView, TestCaseZipProcessor):
             with transaction.atomic():
                 for i in range(1, count + 1):
                     with zip_file.open(f"{i}/problem.json") as f:
-                        problem_info = json.load(f)
+                        # problem_info = json.load(f)
+                        data = f.read().replace(b"\r\n", b"")
+                        my_json = data.decode('utf8').replace("'", '"')
+                        data = json.loads(my_json)
+                        problem_info_str = json.dumps(data, indent=4, sort_keys=True)
+                        problem_info = json.loads(problem_info_str)                        
                         serializer = ImportProblemSerializer(data=problem_info)
                         if not serializer.is_valid():
                             return self.error(f"Invalid problem format, error is {serializer.errors}")
@@ -587,8 +592,6 @@ class ImportProblemAPI(CSRFExemptAPIView, TestCaseZipProcessor):
                         spj = problem_info["spj"] is not None
                         rule_type = problem_info["rule_type"]
                         test_case_score = problem_info["test_case_score"]
-
-                        # process test case
                         _, test_case_id = self.process_zip(tmp_file, spj=spj, dir=f"{i}/testcase/")
 
                         problem_obj = Problem.objects.create(_id=problem_info["display_id"],
